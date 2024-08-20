@@ -289,7 +289,7 @@ class GbifDownload(object):
         self._main_pred_type = "and"
         self._predicate = {"type": self._main_pred_type, "predicates": self.predicates}
 
-        self.url = "http://api.gbif.org/v1/occurrence/download/request"
+        self.url = "https://api.gbif.org/v1/occurrence/download/request"
         self.header = {
             "accept": "application/json",
             "content-type": "application/json",
@@ -302,14 +302,21 @@ class GbifDownload(object):
                 ]
             ),
         }
-
-        self.payload = {
-            "creator": creator,
-            "notification_address": [email],
-            "sendNotification": True,
-            "predicate": self._predicate,
-            "format": self._format,
-        }
+        if email:
+            self.payload = {
+                "creator": creator,
+                "notification_address": [email],
+                "sendNotification": True,
+                "predicate": self._predicate,
+                "format": self._format,
+            }
+        else:
+            self.payload = {
+                "creator": creator,
+                "sendNotification": False,
+                "predicate": self._predicate,
+                "format": self._format,
+            }
         self.request_id = None
 
         # prepare the geometry polygon constructions
@@ -515,7 +522,7 @@ def download_meta(key, **kwargs):
       occ.download_meta(key = "0003970-140910143529206")
       occ.download_meta(key = "0000099-140929101555934")
     """
-    url = "http://api.gbif.org/v1/occurrence/download/" + key
+    url = "https://api.gbif.org/v1/occurrence/download/" + key
     return gbif_GET(url, {}, **kwargs)
 
 
@@ -543,7 +550,7 @@ def download_cancel(key, user=None, pwd=None, **kwargs):
     user = _check_environ("GBIF_USER", user)
     pwd = _check_environ("GBIF_PWD", pwd)
 
-    url = "http://api.gbif.org/v1/occurrence/download/request/" + key
+    url = "https://api.gbif.org/v1/occurrence/download/request/" + key
     return gbif_DELETE(url, {}, auth=(user, pwd), **kwargs)
 
 
@@ -567,7 +574,7 @@ def download_list(user=None, pwd=None, limit=20, offset=0):
     user = _check_environ("GBIF_USER", user)
     pwd = _check_environ("GBIF_PWD", pwd)
 
-    url = "http://api.gbif.org/v1/occurrence/download/user/" + user
+    url = "https://api.gbif.org/v1/occurrence/download/user/" + user
     args = {"limit": limit, "offset": offset}
     res = gbif_GET(url, args, auth=(user, pwd))
     return {
@@ -617,7 +624,7 @@ def download_get(key, path=".", **kwargs):
         raise Exception('download "%s" not of status SUCCEEDED' % key)
     else:
         logging.info("Download file size: %s bytes" % meta["size"])
-        url = "http://api.gbif.org/v1/occurrence/download/request/" + key
+        url = "https://api.gbif.org/v1/occurrence/download/request/" + key
         path = "%s/%s.zip" % (path, key)
         gbif_GET_write(url, path, **kwargs)
         logging.info("On disk at " + path)
